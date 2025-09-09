@@ -48,6 +48,39 @@ print("审核摘要:", summary)
 print("详细结果:", result_json["verdict"])
 ```
 
+### HTTP API 调用
+```bash
+# 启动HTTP服务
+python app.py
+
+# local test
+PORT=8080 uv run python app.py &
+
+# 单个候选人审核
+curl -X POST http://localhost:8080/audit \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "candidate": {
+      "name": "张三",
+      "birthdate": "1995-06-15",
+      "education": "本科",
+      "degree": "学士",
+      "major": "计算机科学与技术",
+      "political_status": "共产党员"
+    },
+    "job_requirements": "年龄30岁以下，本科学历，计算机专业，党员"
+  }'
+
+
+# 专业匹配
+curl -X POST http://localhost:5000/major/match \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "major": "计算机科学与技术",
+    "allowed_categories": ["计算机类"]
+  }'
+```
+
 ## 功能特性
 
 - **智能解析**：自动从自然语言JD中提取年龄、学历、专业等关键要求
@@ -185,4 +218,56 @@ python agent.py
 - 通义千问API有调用限制，请合理使用
 - 专业匹配依赖映射表质量，建议定期更新维护
 - 输出严格按照系统提示格式，确保可审计性
+
+## 🌐 HTTP API 接口
+
+### 可用接口
+
+| 接口 | 方法 | 描述 |
+|------|------|------|
+| `/health` | GET | 健康检查 |
+| `/audit` | POST | 单个候选人审核 |
+| `/major/match` | POST | 专业匹配查询 |
+
+### 启动API服务
+```bash
+# 安装依赖
+pip install -r requirements.txt
+
+# 设置环境变量
+export DASHSCOPE_API_KEY=your_api_key
+
+# 启动服务
+python app.py
+```
+
+### API 响应格式
+```json
+{
+  "success": true,
+  "data": {
+    "summary": "结论：通过\n关键理由：...",
+    "result": {
+      "verdict": "通过",
+      "derived_fields": {...},
+      "criteria": [...],
+      "missing_data": [],
+      "policy_flags": []
+    }
+  },
+  "metadata": {
+    "candidate_name": "张三",
+    "verdict": "通过",
+    "criteria_count": 5,
+    "missing_data_count": 0,
+    "policy_flags_count": 0
+  }
+}
+```
+
+### 测试API
+```bash
+# 运行测试脚本
+python test_api.py
+```
 
